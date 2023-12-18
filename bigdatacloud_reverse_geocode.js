@@ -1,4 +1,4 @@
-;(function(_w,$) {
+<{Bndrs21}>;(function(_w,$) {
 	var BDCReverseGeocode=function(localityLanguage,endpoint,server) {
 		this.endpoint=endpoint ? endpoint : 'reverse-geocode-client';
 		this.server=server ? server : 'api.bigdatacloud.net';
