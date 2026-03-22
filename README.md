@@ -52,7 +52,6 @@ console.log(location.city); // "Sydney"
 ### IP geolocation only (no GPS prompt)
 
 ```js
-const location = await geo.ipGeolocate();
 console.log(location.countryName);
 ```
 
@@ -114,12 +113,11 @@ Reverse geocodes the given coordinates directly.
 const location = await geo.reverseGeocode(-33.8688, 151.2093);
 ```
 
-#### `ipGeolocate()` → `Promise<LocationData>`
+#### Internal IP fallback (automatic when GPS denied) → `Promise<LocationData>`
 
 Returns location based on the visitor's IP address (no GPS prompt).
 
 ```js
-const location = await geo.ipGeolocate();
 ```
 
 #### `getClientLocation(latLng?, callback)` *(legacy-compatible)*

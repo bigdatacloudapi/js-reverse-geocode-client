@@ -99,7 +99,7 @@ export default class BDCReverseGeocode {
    * IP-based geolocation (no coordinates needed).
    * @returns {Promise<Object>} Location data
    */
-  async ipGeolocate() {
+  async _ipFallback() {
     return this._callApi();
   }
 
