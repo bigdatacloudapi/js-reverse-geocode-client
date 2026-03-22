@@ -49,14 +49,6 @@ const location = await geo.reverseGeocode(-33.8688, 151.2093);
 console.log(location.city); // "Sydney"
 ```
 
-### IP geolocation only (no GPS prompt)
-
-```js
-console.log(location.countryName);
-```
-
----
-
 ## Quick Start (Script Tag — Legacy)
 
 For pages that don't use ES modules, include the legacy script:
@@ -115,7 +107,6 @@ const location = await geo.reverseGeocode(-33.8688, 151.2093);
 
 #### Internal IP fallback (automatic when GPS denied) → `Promise<LocationData>`
 
-Returns location based on the visitor's IP address (no GPS prompt).
 
 ```js
 ```
