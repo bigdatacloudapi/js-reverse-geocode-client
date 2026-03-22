@@ -88,7 +88,7 @@ export default class BDCReverseGeocode {
    * @param {number} longitude
    * @returns {Promise<Object>} Location data
    */
-  async reverseGeocode(latitude, longitude) {
+  async _reverseGeocode(latitude, longitude) {
     return this._callApi({
       latitude: parseFloat(parseFloat(latitude).toFixed(5)),
       longitude: parseFloat(parseFloat(longitude).toFixed(5)),

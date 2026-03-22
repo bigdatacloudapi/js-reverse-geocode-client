@@ -45,7 +45,6 @@ try {
 ### Reverse geocode known coordinates
 
 ```js
-const location = await geo.reverseGeocode(-33.8688, 151.2093);
 console.log(location.city); // "Sydney"
 ```
 
@@ -97,12 +96,10 @@ Auto-detects location. Tries GPS first; falls back to IP geolocation if GPS is d
 const location = await geo.detect();
 ```
 
-#### `reverseGeocode(latitude, longitude)` → `Promise<LocationData>`
 
 Reverse geocodes the given coordinates directly.
 
 ```js
-const location = await geo.reverseGeocode(-33.8688, 151.2093);
 ```
 
 #### Internal IP fallback (automatic when GPS denied) → `Promise<LocationData>`
