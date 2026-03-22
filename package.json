@@ -1,0 +1,21 @@
+{
+  "name": "bigdatacloud-reverse-geocode-client",
+  "version": "2.0.0",
+  "description": "Free client-side reverse geocoding — GPS to city/country with automatic IP fallback. No API key needed.",
+  "main": "bigdatacloud_reverse_geocode.js",
+  "module": "bigdatacloud_reverse_geocode.mjs",
+  "type": "module",
+  "keywords": [
+    "reverse-geocoding",
+    "geolocation",
+    "gps",
+    "bigdatacloud",
+    "free",
+    "no-api-key",
+    "client-side"
+  ],
+  "author": "BigDataCloud Pty Ltd",
+  "license": "MIT",
+  "repository": "https://github.com/bigdatacloudapi/js-reverse-geocode-client",
+  "homepage": "https://www.bigdatacloud.com"
+}

@@ -1,3 +1,4 @@
+// Legacy version — for modern ES modules, use bigdatacloud_reverse_geocode.mjs
 ;(function(_w,$) {
 	var BDCReverseGeocode=function(localityLanguage,endpoint,server) {
 		this.endpoint=endpoint ? endpoint : 'reverse-geocode-client';
@@ -20,7 +21,7 @@
 				(function(err) { console.error(err); return this.cb(false);}).bind({cb:cb}),
 				{
 					enableHighAccuracy: true,
-					timeout: 5000,
+					timeout: 10000,
 					maximumAge: 0
 				}
 				);
