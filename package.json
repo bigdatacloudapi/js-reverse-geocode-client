@@ -16,6 +16,9 @@
   ],
   "author": "BigDataCloud Pty Ltd",
   "license": "MIT",
-  "repository": "https://github.com/bigdatacloudapi/js-reverse-geocode-client",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bigdatacloudapi/js-reverse-geocode-client.git"
+  },
   "homepage": "https://www.bigdatacloud.com"
 }
