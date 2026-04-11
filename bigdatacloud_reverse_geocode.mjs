@@ -2,7 +2,13 @@
  * BigDataCloud Free Reverse Geocoding JavaScript Client (Modern ES Module)
  * https://www.bigdatacloud.com
  *
- * GPS-first with automatic IP-based fallback. No API key required.
+ * Fair Use Policy: https://www.bigdatacloud.com/docs/article/fair-use-policy-for-free-client-side-reverse-geocoding-api
+ *
+ * This API is for resolving the current, real-time location of the calling device only.
+ * Pre-stored, cached, or externally-sourced coordinates are NOT permitted.
+ * Violations result in a 402 error and IP ban.
+ *
+ * GPS-first with automatic IP-based fallback when GPS is denied. No API key required.
  * For legacy script tag usage, see bigdatacloud_reverse_geocode.js
  */
 
@@ -19,7 +25,7 @@ export default class BDCReverseGeocode {
 
   /**
    * Build the API URL with query parameters.
-   * @param {Object} params - Optional lat/lng and other params
+   * @param {Object} params - Optional lat/lng params (from live device GPS only)
    * @returns {string}
    */
   _buildUrl(params = {}) {
@@ -32,7 +38,7 @@ export default class BDCReverseGeocode {
 
   /**
    * Call the BigDataCloud API.
-   * @param {Object} params - Query params (optional lat/lng)
+   * @param {Object} params - Query params (live GPS coords or empty for IP fallback)
    * @returns {Promise<Object>} Parsed JSON response
    */
   async _callApi(params = {}) {
@@ -46,7 +52,7 @@ export default class BDCReverseGeocode {
   }
 
   /**
-   * Get GPS coordinates from the browser.
+   * Get GPS coordinates from the browser (fine accuracy preferred).
    * @returns {Promise<GeolocationCoordinates>}
    */
   _getGpsCoordinates() {
@@ -62,57 +68,21 @@ export default class BDCReverseGeocode {
     });
   }
 
-  /**
-   * Normalise various lat/lng shapes into { latitude, longitude }.
-   * @param {Object} latLng
-   * @returns {{ latitude: number, longitude: number } | {}}
-   */
-  _processLatLng(latLng) {
-    if (!latLng || latLng === -1) return {};
-    const src = latLng.coords ?? latLng;
-    const lat = src.latitude ?? src.lat;
-    const lng = src.longitude ?? src.long ?? src.lng;
-    const result = {};
-    if (lat != null) result.latitude = parseFloat(parseFloat(lat).toFixed(5));
-    if (lng != null) result.longitude = parseFloat(parseFloat(lng).toFixed(5));
-    return result;
-  }
-
   // ---------------------------------------------------------------------------
   // Public API
   // ---------------------------------------------------------------------------
 
   /**
-   * Reverse geocode given coordinates.
-   * @param {number} latitude
-   * @param {number} longitude
-   * @returns {Promise<Object>} Location data
-   */
-  async _reverseGeocode(latitude, longitude) {
-    return this._callApi({
-      latitude: parseFloat(parseFloat(latitude).toFixed(5)),
-      longitude: parseFloat(parseFloat(longitude).toFixed(5)),
-    });
-  }
-
-  /**
-   * IP-based geolocation (no coordinates needed).
-   * @returns {Promise<Object>} Location data
-   */
-  async _ipFallback() {
-    return this._callApi();
-  }
-
-  /**
    * Auto-detect location: tries GPS first, falls back to IP if denied/unavailable.
+   * This is the primary method — always use this for automatic location detection.
    * @returns {Promise<Object>} Location data
    */
   async detect() {
     try {
       const coords = await this._getGpsCoordinates();
       return this._callApi({
-        latitude: parseFloat(parseFloat(coords.latitude).toFixed(5)),
-        longitude: parseFloat(parseFloat(coords.longitude).toFixed(5)),
+        latitude: parseFloat(coords.latitude.toFixed(5)),
+        longitude: parseFloat(coords.longitude.toFixed(5)),
       });
     } catch {
       // GPS denied or unavailable — fall back to IP geolocation
@@ -121,41 +91,26 @@ export default class BDCReverseGeocode {
   }
 
   /**
-   * Callback-based reverse geocode (legacy-compatible).
-   * If latLng is omitted or a function, tries GPS first then IP fallback.
-   * @param {Object|Function|null} latLng - Coordinates object, or callback if skipping
-   * @param {Function} [cb] - Callback receiving (result | false)
+   * Callback-based location detection (legacy-compatible).
+   * Tries GPS first, automatically falls back to IP if GPS is denied/unavailable.
+   * @param {Function} cb - Callback receiving (result | false)
    */
-  getClientLocation(latLng, cb) {
-    if (typeof latLng === 'function' && !cb) {
-      cb = latLng;
-      latLng = null;
-    }
-    if (!cb) return false;
+  getClientLocation(cb) {
+    if (typeof cb !== 'function') return false;
 
-    if (!latLng && latLng !== -1) {
-      // Try GPS first
-      this._getGpsCoordinates()
-        .then((coords) => {
-          const params = this._processLatLng(coords);
-          return this._callApi(params);
-        })
-        .catch(() => {
-          // GPS failed — fall back to IP
-          return this._callApi();
-        })
-        .then((result) => cb(result))
-        .catch((err) => { console.error(err); cb(false); });
-    } else {
-      const params = this._processLatLng(latLng);
-      this._callApi(params)
-        .then((result) => cb(result))
-        .catch((err) => { console.error(err); cb(false); });
-    }
+    this._getGpsCoordinates()
+      .then((coords) => this._callApi({
+        latitude: parseFloat(coords.latitude.toFixed(5)),
+        longitude: parseFloat(coords.longitude.toFixed(5)),
+      }))
+      .catch(() => this._callApi())  // GPS denied — IP fallback
+      .then((result) => cb(result))
+      .catch((err) => { console.error(err); cb(false); });
   }
 
   /**
    * Callback-based GPS coordinate retrieval (legacy-compatible).
+   * Returns null if GPS is denied — use detect() for automatic IP fallback.
    * @param {Function} cb - Callback receiving (GeolocationPosition | false)
    */
   getClientCoordinates(cb) {

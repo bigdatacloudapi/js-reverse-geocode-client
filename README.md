@@ -2,62 +2,36 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Description
-
-A lightweight, zero-dependency JavaScript client for [BigDataCloud's free reverse geocoding API](https://www.bigdatacloud.com). Convert GPS coordinates to city, country and locality information — right in the browser, with no API key required.
+A lightweight, zero-dependency JavaScript client for [BigDataCloud's free reverse geocoding API](https://www.bigdatacloud.com). Resolves the current device's GPS position to city, country and locality information — right in the browser, with no API key required.
 
 **How it works:**
-1. Requests the user's GPS position via the browser Geolocation API
-2. If GPS is available and permitted, reverse geocodes the coordinates
+1. Requests the user's GPS position via the browser Geolocation API (fine location preferred)
+2. If GPS is available and permitted, reverse geocodes the live coordinates
 3. If GPS is denied or unavailable, automatically falls back to IP-based geolocation
 
-No sign-up, no API key, no server required for basic use.
+No sign-up, no API key, no server required.
 
 ---
 
-## Quick Start (Modern — ES Module)
+## Quick Start (ES Module)
 
 ```js
 import BDCReverseGeocode from './bigdatacloud_reverse_geocode.mjs';
 
 const geo = new BDCReverseGeocode();
 
-// Promise-based: GPS first, IP fallback automatic
+// GPS first, IP fallback automatic
 const location = await geo.detect();
 console.log(location.city, location.countryName);
 ```
 
-### With async/await error handling
-
-```js
-import BDCReverseGeocode from './bigdatacloud_reverse_geocode.mjs';
-
-const geo = new BDCReverseGeocode();
-
-try {
-  const location = await geo.detect();
-  console.log(`You are in ${location.city}, ${location.countryName}`);
-} catch (err) {
-  console.error('Could not determine location', err);
-}
-```
-
-### Reverse geocode known coordinates
-
-```js
-console.log(location.city); // "Sydney"
-```
-
-## Quick Start (Script Tag — Legacy)
-
-For pages that don't use ES modules, include the legacy script:
+## Quick Start (Script Tag)
 
 ```html
 <script src="bigdatacloud_reverse_geocode.js"></script>
 <script>
   var geo = new BDCReverseGeocode();
 
-  // GPS first, IP fallback
   geo.getClientLocation(function(location) {
     if (!location) {
       console.error('Could not determine location');
@@ -84,108 +58,79 @@ new BDCReverseGeocode(localityLanguage?, endpoint?, server?)
 | `endpoint` | `'reverse-geocode-client'` | API endpoint |
 | `server` | `'api.bigdatacloud.net'` | API server hostname |
 
----
+### `detect()` → `Promise<LocationData>`
 
-### Modern API (`.mjs`)
-
-#### `detect()` → `Promise<LocationData>`
-
-Auto-detects location. Tries GPS first; falls back to IP geolocation if GPS is denied or unavailable.
+Auto-detects location. Requests GPS first; automatically falls back to IP geolocation if GPS is denied or unavailable.
 
 ```js
 const location = await geo.detect();
+console.log(location.city, location.countryName);
 ```
 
+### `getClientLocation(callback)` *(legacy)*
 
-Reverse geocodes the given coordinates directly.
-
-```js
-```
-
-#### Internal IP fallback (automatic when GPS denied) → `Promise<LocationData>`
-
-
-```js
-```
-
-#### `getClientLocation(latLng?, callback)` *(legacy-compatible)*
-
-Callback-based. If `latLng` is omitted, tries GPS then falls back to IP.
+Callback-based. Tries GPS then falls back to IP.
 
 ```js
 geo.getClientLocation(function(location) {
   console.log(location?.city);
 });
-
-// Or with known coords:
-geo.getClientLocation({ latitude: -33.8688, longitude: 151.2093 }, function(location) {
-  console.log(location.city);
-});
 ```
 
-#### `getClientCoordinates(callback)` *(legacy-compatible)*
+### `getClientCoordinates(callback)` *(legacy)*
 
 Returns the raw GPS position via callback.
 
 ```js
 geo.getClientCoordinates(function(position) {
-  if (!position) return; // GPS denied
+  if (!position) return; // GPS denied — IP fallback will be used
   console.log(position.coords.latitude, position.coords.longitude);
 });
 ```
 
 ---
 
-### LocationData response fields
-
-Key fields returned by the API:
+### LocationData fields
 
 | Field | Type | Description |
 |---|---|---|
-| `latitude` | number | Latitude |
-| `longitude` | number | Longitude |
 | `city` | string | City/town name |
-| `locality` | string | Locality/suburb name |
+| `localityName` | string | Locality/suburb name |
 | `countryName` | string | Country name |
-| `countryCode` | string | ISO 3166-1 alpha-2 country code |
+| `countryCode` | string | ISO 3166-1 alpha-2 |
 | `principalSubdivision` | string | State/province |
-| `postcode` | string | Postal code (if available) |
-| `isLandmark` | boolean | Whether coordinates fall on a landmark |
+| `postcode` | string | Postal code |
+| `latitude` | number | Resolved latitude |
+| `longitude` | number | Resolved longitude |
 
 ---
 
-## Framework-Specific Alternatives
-
-If you're using a framework, consider these dedicated packages:
+## Framework Alternatives
 
 | Framework | Package |
 |---|---|
-| **React** | [`@bigdatacloudapi/react-reverse-geocode-client`](https://www.npmjs.com/package/@bigdatacloudapi/react-reverse-geocode-client) on npm |
-| **Vue / Nuxt** | [`@bigdatacloudapi/vue-reverse-geocode-client`](https://www.npmjs.com/package/@bigdatacloudapi/vue-reverse-geocode-client) on npm |
-| **Flutter / Dart** | [`bigdatacloud_reverse_geocode_client`](https://pub.dev/packages/bigdatacloud_reverse_geocode_client) on pub.dev |
-| **Node.js** | [`@bigdatacloudapi/client`](https://www.npmjs.com/package/@bigdatacloudapi/client) on npm |
-| **AI / MCP** | [`@bigdatacloudapi/mcp-server`](https://www.npmjs.com/package/@bigdatacloudapi/mcp-server) on npm |
+| **React** | [`@bigdatacloudapi/react-reverse-geocode-client`](https://www.npmjs.com/package/@bigdatacloudapi/react-reverse-geocode-client) |
+| **Vue / Nuxt** | [`@bigdatacloudapi/vue-reverse-geocode-client`](https://www.npmjs.com/package/@bigdatacloudapi/vue-reverse-geocode-client) |
+| **Flutter / Dart** | [`bigdatacloud_reverse_geocode_client`](https://pub.dev/packages/bigdatacloud_reverse_geocode_client) |
+| **Swift (iOS/macOS)** | [`bigdatacloud-swift-client`](https://github.com/bigdatacloudapi/bigdatacloud-swift-client) |
+| **Kotlin (Android)** | [`bigdatacloud-kotlin-client`](https://github.com/bigdatacloudapi/bigdatacloud-kotlin-client) |
 
 ---
 
-## Fair Use
+## Fair Use Policy
 
-This client uses BigDataCloud's **free, client-side reverse geocoding API**. It is intended for browser-based use only — requests must originate from end-user browsers, not from servers or automated scripts.
+This library uses BigDataCloud's free client-side reverse geocoding API (`api.bigdatacloud.net`), governed by the [Fair Use Policy](https://www.bigdatacloud.com/docs/article/fair-use-policy-for-free-client-side-reverse-geocoding-api).
 
-Please review the [Fair Use Policy](https://www.bigdatacloud.com/support/fair-use-policy-for-free-client-side-reverse-geocoding-api) before integrating.
+**This API is for resolving the current, real-time location of the calling device only.**
 
-For **server-side or testing use**, please use the authenticated [Reverse Geocode to City API](https://www.bigdatacloud.com/reverse-geocoding/reverse-geocode-to-city-api) instead. A free tier is available after sign-up.
+Key rules:
+- **Client-side only** — requests must originate directly from the device being located, not from a server or automated script
+- **Real-time coordinates only** — only live GPS/WiFi coordinates obtained at the moment of the call are permitted. Pre-stored, cached, or externally-sourced coordinates are strictly **not allowed**
+- **User consent required** — coordinates must be obtained via the browser Geolocation API with the user's explicit permission
 
----
+Violations result in a **402 error and your IP address being banned**.
 
-## Links
-
-- 🌐 Website: [bigdatacloud.com](https://www.bigdatacloud.com)
-- 🔑 Sign up / Log in: [bigdatacloud.com/login](https://www.bigdatacloud.com/login)
-- 📡 What is my IP: [bigdatacloud.com/what-is-my-ip](https://www.bigdatacloud.com/what-is-my-ip)
-- 🗺️ ISP & Network guide: [bigdatacloud.com/network-by-ip](https://www.bigdatacloud.com/network-by-ip)
-- 📊 Accuracy report: [bigdatacloud.com/geocoding-accuracy](https://www.bigdatacloud.com/geocoding-accuracy)
-- ⚖️ Fair use policy: [bigdatacloud.com/support/fair-use-policy-for-free-client-side-reverse-geocoding-api](https://www.bigdatacloud.com/support/fair-use-policy-for-free-client-side-reverse-geocoding-api)
+If you need to geocode coordinates you already have, or need server-side geocoding, use the [Reverse Geocoding API](https://www.bigdatacloud.com/docs/reverse-geocoding) with a free API key instead — it includes 50,000 free queries per month.
 
 ---
 

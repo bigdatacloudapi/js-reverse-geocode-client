@@ -1,128 +1,80 @@
-// Legacy version — for modern ES modules, use bigdatacloud_reverse_geocode.mjs
-;(function(_w,$) {
-	var BDCReverseGeocode=function(localityLanguage,endpoint,server) {
-		this.endpoint=endpoint ? endpoint : 'reverse-geocode-client';
-		this.server=server ? server : 'api.bigdatacloud.net';
-		this.localityLanguage=localityLanguage ? localityLanguage : 'en';
-	};
-	BDCReverseGeocode.prototype={
-		setApi:function(api) {
-			this.api=api;
-			return this;
-		},
-		getApi:function() {
-			return this.api;
-		},
-		getClientCoordinates:function(cb) {
-			if (!cb) return false;
-			if (!navigator.geolocation || !navigator.geolocation.getCurrentPosition) return cb(false);
-			return navigator.geolocation.getCurrentPosition(
-				(function(position) { return this.cb(position);}).bind({cb:cb}),
-				(function(err) { console.error(err); return this.cb(false);}).bind({cb:cb}),
-				{
-					enableHighAccuracy: true,
-					timeout: 10000,
-					maximumAge: 0
-				}
-				);
-		},
-		getClientLocation:function(latLng,cb) {
-			var _this=this;
-			if (typeof latLng=='function' && !cb) {
-				cb=latLng;
-				latLng=null;
-			} else if (latLng=='function') {
-				latLng=latLng();
-			}
-			if (!cb) return false;
-			if (!latLng && latLng!=-1) {
-				return this.getClientCoordinates(function(position) {
-					_this.getClientLocation(position ? position : -1,cb);
-				})
-			} else {
-				this.callApi(this.processLatLng(latLng),function(result) {
-					cb(result);
-				},function(err) {
-					console.error(err);
-					cb(false);
-				});
-			}
-		},
-		processLatLng:function(latLng) {
-			var result={};
-			if (!latLng || latLng==-1) return {};
-			if (latLng.coords) {
-				latLng=latLng.coords;
-			}
-			if (!typeof latLng.latitude) {
-				if (latLng.lat) {
-					latLng.latitude=latLng.lat;
-				}
-			}
-			if (!typeof latLng.longitude) {
-				if (latLng.long) {
-					latLng.longitude=latLng.long;
-				}
-				if (latLng.lng) {
-					latLng.longitude=latLng.lng;
-				}
-			}
-			if (typeof latLng.latitude!= 'undefined') {
-				result.latitude=parseFloat(parseFloat(latLng.latitude).toFixed(5));
-			}
-			if (typeof latLng.longitude!= 'undefined') {
-				result.longitude=parseFloat(parseFloat(latLng.longitude).toFixed(5));
-			}
-			return result;
-		},
-		callApi:function(payload,cb) {
-			var xhr = new XMLHttpRequest()
-			xhr.open(
-				'GET',
-				'https://'+this.server+'/data/'+this.endpoint+'?'+this.prepareData(payload),
-				true
-				);
-			xhr.onreadystatechange = function() {
-				if (this.readyState === XMLHttpRequest.DONE) {
-					if (this.status === 200) {
-						try {
-							cb(JSON.parse(this.responseText))
-						} catch (e) {
-							cb(false)
-						}
-					} else {
-						try {
-							var result=JSON.parse(this.responseText);
-							console.error(result,this.status);
-							cb(false);
-						} catch (e) {
-							console.error(this.responseText,this.status);
-							cb(false);
-						}
-					}
-				}
-			}
-			xhr.send();
-		},
-		prepareData:function(payload) {
-			var data=[];
-			var hasLocalityLanguage=false;
-			if (payload) {
-				for (var i in payload) {
-					switch(i) {
-						case 'localityLanguage':
-						hasLocalityLanguage=true;
-						break;
-					}
-					data.push(encodeURIComponent(i)+'='+encodeURIComponent(payload[i]));
-				}
-			}
-			if (!hasLocalityLanguage) data.push('localityLanguage='+this.localityLanguage);
-			data=data.join('&');
-			return data;
-		}
-	}
+/**
+ * BigDataCloud Free Reverse Geocoding JavaScript Client (Legacy / Script Tag)
+ * For modern ES modules, use bigdatacloud_reverse_geocode.mjs
+ *
+ * Fair Use Policy: https://www.bigdatacloud.com/docs/article/fair-use-policy-for-free-client-side-reverse-geocoding-api
+ *
+ * This API is for resolving the current, real-time location of the calling device only.
+ * Pre-stored, cached, or externally-sourced coordinates are NOT permitted.
+ * Violations result in a 402 error and IP ban.
+ */
+;(function(_w) {
+  var BDCReverseGeocode = function(localityLanguage, endpoint, server) {
+    this.endpoint = endpoint || 'reverse-geocode-client';
+    this.server = server || 'api.bigdatacloud.net';
+    this.localityLanguage = localityLanguage || 'en';
+  };
 
-	_w.BDCReverseGeocode=BDCReverseGeocode;
+  BDCReverseGeocode.prototype = {
 
-})(window,typeof jQuery=='undefined' ? null : jQuery);
+    /**
+     * Get live GPS coordinates from the browser (fine accuracy preferred).
+     * @param {Function} cb - Callback receiving (GeolocationPosition | false)
+     */
+    getClientCoordinates: function(cb) {
+      if (!cb) return false;
+      if (!navigator.geolocation || !navigator.geolocation.getCurrentPosition) return cb(false);
+      return navigator.geolocation.getCurrentPosition(
+        function(position) { cb(position); },
+        function(err) { console.error(err); cb(false); },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    },
+
+    /**
+     * Detect location: tries GPS first, falls back to IP if GPS is denied/unavailable.
+     * @param {Function} cb - Callback receiving (result | false)
+     */
+    getClientLocation: function(cb) {
+      var _this = this;
+      if (typeof cb !== 'function') return false;
+
+      this.getClientCoordinates(function(position) {
+        var params = {};
+        if (position && position.coords) {
+          params.latitude  = parseFloat(parseFloat(position.coords.latitude).toFixed(5));
+          params.longitude = parseFloat(parseFloat(position.coords.longitude).toFixed(5));
+        }
+        // If no GPS — params is empty and the API uses IP for location
+        _this.callApi(params, function(result) { cb(result); });
+      });
+    },
+
+    callApi: function(payload, cb) {
+      var xhr = new XMLHttpRequest();
+      var data = ['localityLanguage=' + encodeURIComponent(this.localityLanguage)];
+      if (payload) {
+        for (var key in payload) {
+          if (key !== 'localityLanguage') {
+            data.push(encodeURIComponent(key) + '=' + encodeURIComponent(payload[key]));
+          }
+        }
+      }
+      xhr.open('GET', 'https://' + this.server + '/data/' + this.endpoint + '?' + data.join('&'), true);
+      xhr.onreadystatechange = function() {
+        if (this.readyState === XMLHttpRequest.DONE) {
+          if (this.status === 200) {
+            try { cb(JSON.parse(this.responseText)); } catch(e) { cb(false); }
+          } else {
+            console.error(this.responseText, this.status);
+            cb(false);
+          }
+        }
+      };
+      xhr.send();
+    }
+  };
+
+  _w.BDCReverseGeocode = BDCReverseGeocode;
+
+})(window);
